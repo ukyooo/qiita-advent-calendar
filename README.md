@@ -1,5 +1,11 @@
 # Qiita Advent Calendar
 
+Qiita Advent Calendar の [はてなブックマーク](http://b.hatena.ne.jp/) 数を取得
+
+* see: https://qiita.com/ukyooo/items/5e23db46dbc1bbf0c2ed
+
+
+
 ## Usage
 
 ```
