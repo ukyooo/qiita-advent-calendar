@@ -75,14 +75,27 @@ class adventCalendar(object):
         url = 'https://qiita.com/advent-calendar/%s/%s' % (self.year, code)
         soup = self.getWeb(url)
         result = []
-        for row in soup.find_all('div', class_='adventCalendarCalendar_comment'):
-            a = row.find('a')
-            if a is None:
+
+        for row in soup.find_all('td', class_='adventCalendarCalendar_day'):
+            author = row.find('div', class_='adventCalendarCalendar_author').find('a')
+            if author is None:
+                self.log('no author')
                 continue
 
-            title = a.text
+            m = re.match('^/(.*)$', author.get('href'))
+            if m is None:
+                self.log('no author name')
+                continue
+            user = m.group(1)
 
-            url = a.get('href')
+            comment = row.find('div', class_='adventCalendarCalendar_comment').find('a')
+            if comment is None:
+                self.log('no comment')
+                continue
+
+            title = comment.text
+
+            url = comment.get('href')
             url_parsed = urlparse.urlparse(url)
 
             if url_parsed.netloc in ['goo.gl', 't.co', 'bit.ly', 'is.gd', 'wp.me']:
@@ -151,7 +164,12 @@ class adventCalendar(object):
             if re.match('^com\.fc2.blog\d+\.', domain_reversed) is not None:
                 domain_reversed = 'com.fc2.blog.'
 
-            item = { 'title': title, 'url': url, 'domain': domain_reversed }
+            item = {
+                'title':    title,
+                'user':     user,
+                'url':      url,
+                'domain':   domain_reversed,
+            }
             # yield item
             result.append(item)
 

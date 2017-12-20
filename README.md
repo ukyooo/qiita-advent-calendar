@@ -21,6 +21,7 @@ $ python dump.py > dump.json
 | name          | string    | カレンダーの名称              |
 | count         | integer   | カレンダーに対する はてブ数   |
 | item[].url    | string    | 記事の URL                    |
+| item[].user   | string    | 記事の投稿者                  |
 | item[].title  | string    | 記事のタイトル                |
 | item[].count  | integer   | 記事に対する はてブ数         |
 | item[].domain | string    |                               |
@@ -37,18 +38,21 @@ $ cat dump.json | jq '.[]|select(.code == "ex-mixi")' ;
       "url": "http://masartz.hatenablog.jp/entry/2017/12/01/101612",
       "count": 74,
       "domain": "hatena.d.",
+      "user": "masartz",
       "title": "昔やってたこと、今やってること、とかとかIntroduction "
     },
     {
       "url": "http://kakkablog.hatenadiary.jp/entry/2017/12/01/190151",
       "count": 14,
       "domain": "hatena.d.",
+      "user": "KAKKA",
       "title": "スクラムとかAndroidとか音声認識とかに関して "
     },
     {
       "url": "http://kkinukawa.hatenablog.com/entry/2017/12/03/002951",
       "count": 13,
       "domain": "hatena.d.",
+      "user": "k_kinukawa",
       "title": "Go書くぞおじさんになった話（あるいは\"射撃しつつ前進\"するためのスイッチの入れ方） "
     },
     ...
