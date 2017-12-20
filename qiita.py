@@ -77,7 +77,13 @@ class adventCalendar(object):
         result = []
 
         for row in soup.find_all('td', class_='adventCalendarCalendar_day'):
-            author = row.find('div', class_='adventCalendarCalendar_author').find('a')
+            # author = row.find('div', class_='adventCalendarCalendar_author').find('a')
+            author = row.find('div', class_='adventCalendarCalendar_author')
+            if author is None:
+                self.log('no author')
+                continue
+
+            author = author.find('a')
             if author is None:
                 self.log('no author')
                 continue
