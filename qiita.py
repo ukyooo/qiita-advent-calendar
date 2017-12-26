@@ -22,11 +22,17 @@ class adventCalendar(object):
     max_calendar_page = 100
     max_calendar_per_page = 20
 
-    def __init__(self, year=None):
+    def __init__(self, year=None, interval=None, verbose=None):
         '''
         '''
         if year is not None:
             self.year = year
+
+        if interval is not None:
+            self.interval = interval
+
+        if verbose is not None:
+            self.verbose = verbose
 
 
     def __del__(self):
@@ -80,23 +86,23 @@ class adventCalendar(object):
             # author = row.find('div', class_='adventCalendarCalendar_author').find('a')
             author = row.find('div', class_='adventCalendarCalendar_author')
             if author is None:
-                self.log('no author')
+                # self.log('no author')
                 continue
 
             author = author.find('a')
             if author is None:
-                self.log('no author')
+                # self.log('no author')
                 continue
 
             m = re.match('^/(.*)$', author.get('href'))
             if m is None:
-                self.log('no author name')
+                # self.log('no author name')
                 continue
             user = m.group(1)
 
             comment = row.find('div', class_='adventCalendarCalendar_comment').find('a')
             if comment is None:
-                self.log('no comment')
+                # self.log('no comment')
                 continue
 
             title = comment.text
@@ -106,14 +112,18 @@ class adventCalendar(object):
 
             if url_parsed.netloc in ['goo.gl', 't.co', 'bit.ly', 'is.gd', 'wp.me']:
                 # 短縮 URL リダイレクト先 URL 取得
+                url_redirected = None
                 try:
                     response = requests.get(url, allow_redirects=True)
-                    url = response.url
+                    url_redirected = response.url
                 except:
-                    url = None
                     pass
-                if url is None:
+
+                if url_redirected is None:
+                    self.log('Failure : redirect URL = %s' % (url))
                     continue
+
+                url = url_redirected
                 url_parsed = urlparse.urlparse(url)
 
             # ドメインを反転させて格納
@@ -169,6 +179,10 @@ class adventCalendar(object):
                 domain_reversed = 'com.fc2.blog.'
             if re.match('^com\.fc2.blog\d+\.', domain_reversed) is not None:
                 domain_reversed = 'com.fc2.blog.'
+
+            # com.medium.
+            if domain_reversed == 'com.medium.':
+                url = self.formatMediumURL(url)
 
             item = {
                 'title':    title,
@@ -258,4 +272,46 @@ class adventCalendar(object):
             item['count'] = result[item['url']] # 記事
 
         return row
+
+
+    def formatMediumURL(self, url):
+        ''' Medium URL 整形
+
+        NOTE: はてなブックマーク が整形後の URL でカウントされている為
+
+        https://medium.com/@nakanokyohei/%E5%AD%90%E4%BE%9B%E3%81%AB%E3%82%B9%E3%83%9E%E3%83%BC%E3%83%88%E3%83%95%E3%82%A9%E3%83%B3%E3%82%92%E4%B8%8E%E3%81%88%E3%81%9F%E8%A9%B1-8bc737220720
+            -> https://medium.com/@nakanokyohei/8bc737220720
+
+        https://medium.com/sotayamashita/glitch-github-%E3%81%A7%E7%B0%A1%E5%8D%98%E3%81%AB%E3%82%A2%E3%83%97%E3%83%AA%E3%82%92%E5%85%AC%E9%96%8B-b75af068ec46
+            -> https://medium.com/sotayamashita/b75af068ec46
+
+        # 独自ドメイン設定
+        https://medium.com/p/8f11f33bfa96
+            -> https://blog.kadoppe.com/%E5%AD%A6%E3%81%B3-%E3%81%AB%E3%83%95%E3%82%A9%E3%83%BC%E3%82%AB%E3%82%B9%E3%82%92%E3%81%82%E3%81%A6%E3%81%9F%E6%97%A5%E5%A0%B1%E3%81%AE%E3%82%88%E3%81%86%E3%81%AA%E3%82%82%E3%81%AE%E3%82%92%E5%8B%9D%E6%89%8B%E3%81%AB%E6%9B%B8%E3%81%84%E3%81%A6%E3%82%8B%E8%A9%B1-8f11f33bfa96
+        '''
+        # m = re.match('^https://medium.com/p/(\w+)$', url)
+        m = re.match('^https://medium.com/p/([0-9a-f]+)$', url)
+        if m is not None:
+            # リダイレクタ
+            response = requests.get(url, allow_redirects=True)
+            # self.log('LOG : com.medium. : %s => %s' % (url, response.url))
+            return response.url
+
+        m = re.match('^https://medium.com/(@?[a-zA-Z0-9_\-\.]+)/([0-9a-f]+)$', url)
+        if m is not None:
+            # 変換不要
+            # self.log('OK : com.medium. : url = %s' % (url))
+            return url
+
+        # m = re.match('^https://medium.com/(@?[-\.\w]+)/(.*)-(\w+)$', url)
+        m = re.match('^https://medium.com/(@?[a-zA-Z0-9_\-\.]+)/(.*)-([0-9a-f]+)$', url)
+        if m is None:
+            self.log('NG : com.medium. : url = %s' % (url))
+            raise Exception
+        else:
+            # self.log('OK : com.medium. : url = %s' % (url))
+            url = 'https://medium.com/%s/%s' % (m.group(1), m.group(3))
+            # self.log('OK : com.medium. : url = %s' % (url))
+
+        return url
 
